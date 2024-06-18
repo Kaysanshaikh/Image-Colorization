@@ -1,0 +1,137 @@
+* {
+    margin: 0px 0px;
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+}
+
+
+
+body {
+    /* background-image: linear-gradient(#20262E 0%, #913175 200%); */
+    /* background-image: url('image3.jpg'); */
+    /* object-fit: cover; */
+    /* background-image: linear-gradient(#20262E 0%, #400E32 100%); */
+    /* background-repeat: no-repeat; */
+    background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+	background-size: 400% 400%;
+	animation: gradient 15s ease infinite;
+    
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+@keyframes gradient {
+	0% {
+		background-position: 0% 50%;
+	}
+	50% {
+		background-position: 100% 50%;
+	}
+	100% {
+		background-position: 0% 50%;
+	}
+}
+
+
+.my-container {
+    width: 100vw;
+    height: 100vh;
+
+}
+
+.container {
+    width: 100vw;
+    height: 100vh;
+
+}
+
+#error {
+    display: flex;
+    justify-content: center;
+    color: red;
+}
+
+.container-navbar {
+    padding: 25px;
+    display: flex;
+    /* background-color: rgb(52, 130, 198); */
+    justify-content: right;
+}
+
+.text {
+    color: white;
+    background: none;
+    font-size: 25px;
+    text-decoration: none;
+    padding: 10px 35px 10px 35px;
+    transition-duration: 0.5s;
+    border-radius: 5px;
+}
+.bw {
+    font-size: 55px;
+}
+
+.text:hover {
+    border-radius: 35px;
+    background-color: rgb(255, 255, 255);
+    color: black;
+    transition-duration: 0.5s;
+}
+
+.active {
+    border-radius: 25px;
+    background-color: rgb(255, 255, 255);
+    color: black;
+    transition-duration: 0.5s;
+
+}
+
+.mainSec {
+    font-family: 'Courier New', Courier, monospace !important;
+    color: white;
+    margin: 50px;
+    text-align: center;
+}
+
+
+
+.upload-button {
+    display: flex;
+    justify-content: center;
+}
+
+.row {
+    padding: 10px;
+
+}
+
+#initial-img img {
+    height: 500px;
+}
+
+#initial-img {
+    padding: 30px;
+}
+
+#final-img img {
+    height: 500px;
+}
+
+#final-img {
+    padding: 30px;
+}
+
+.download-button {
+    display: flex;
+    justify-content: center;
+}
+
+.download-button a {
+    text-decoration: none;
+    color: white;
+}
+
+.btn-primary:hover {
+    color: #255784;
+    background: #2196f3;
+    box-shadow: 0 0 5px #2196f3, 0 0 10px #2196f3, 0 0 15px #2196f3;
+}
