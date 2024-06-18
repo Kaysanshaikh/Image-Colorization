@@ -1,0 +1,15 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+autonumber
+
+User -> Flask_Application:  Request home page
+Flask_Application --> User: Renders HTML form
+
+User -> Flask_Application:  Submits image to server
+Flask_Application -> Opencv: Processing,Adds color ,Renders colorized img
+
+Flask_Application --> User:  Opencv: Processing,Adds color ,Renders colorized img
+Flask_Application --> User:  Automatically Save the image into results folder
+
+@enduml
