@@ -11,7 +11,7 @@ from werkzeug.utils import secure_filename
 import gdown
 
 url = "https://drive.google.com/file/d/1LAH7CvTjwswtT6OLLKTiojCoARP1o_mL"  # Get the file ID from Google Drive link
-output = "model.pth"
+output = "colorization_release_v2.caffemodel"
 gdown.download(url, output, quiet=False)
 
 # Initiating app with name 'app'
