@@ -33,7 +33,7 @@ def colorImage(image_path, image_name):
     # Define paths for model files
     base_dir = os.path.dirname(__file__)
     prototxt = os.path.join(base_dir, "colorization_deploy_v2.prototxt")
-    caffe_model = os.path.join(base_dir, "colorization_release_v2_optimized")
+    caffe_model = os.path.join(base_dir, "colorization_release_v2_optimized.caffemodel")
     pts_npy = os.path.join(base_dir, "pts_in_hull.npy")
 
     # Check if files exist
