@@ -15,7 +15,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(
 app = Flask(__name__)
 
 # Configuring default values for app
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'Strange')  # Use environment variable
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'default-secret-key')
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['RESULT_FOLDER'] = 'results'
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
