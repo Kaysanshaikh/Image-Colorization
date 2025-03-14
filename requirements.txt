@@ -7,3 +7,4 @@ matplotlib
 opencv-python
 gunicorn
 gdown
+psutil
