@@ -1,13 +1,12 @@
-flask==2.3.3
+Flask
 Flask-Uploads
-flask-wtf==1.1.1
-werkzeug==2.3.7
+Flask-WTF
 WTForms
-numpy==1.24.3
+numpy
 matplotlib
-opencv-python-headless==4.8.0.74
+opencv-python
 gunicorn
-psutil==5.9.5
+psutil
 
 
 
