@@ -6,3 +6,4 @@ numpy
 matplotlib
 opencv-python
 gunicorn
+gdown
