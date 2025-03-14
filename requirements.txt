@@ -2,6 +2,8 @@ Flask
 Flask-Uploads
 Flask-WTF
 WTForms
+opencv-python-headless==4.8.0.74
+werkzeug==2.3.7
 numpy
 matplotlib
 opencv-python
