@@ -8,6 +8,12 @@ import cv2
 import os
 from werkzeug.utils import secure_filename
 
+import gdown
+
+url = "https://drive.google.com/file/d/1LAH7CvTjwswtT6OLLKTiojCoARP1o_mL"  # Get the file ID from Google Drive link
+output = "model.pth"
+gdown.download(url, output, quiet=False)
+
 # Initiating app with name 'app'
 app = Flask(__name__)
 
@@ -33,7 +39,7 @@ def colorImage(image_path, image_name):
     # Define paths for model files
     base_dir = os.path.dirname(__file__)
     prototxt = os.path.join(base_dir, "colorization_deploy_v2.prototxt")
-    caffe_model = os.path.join(base_dir, "colorization_release_v2_optimized")
+    caffe_model = os.path.join(base_dir, "colorization_release_v2.caffemodel")
     pts_npy = os.path.join(base_dir, "pts_in_hull.npy")
 
     # Check if files exist
