@@ -6,6 +6,7 @@ import numpy as np
 import cv2
 import os
 from werkzeug.utils import secure_filename
+import psutil  # For monitoring memory usage
 import gdown
 
 # Download the model file from Google Drive
@@ -33,8 +34,15 @@ class UploadForm(FlaskForm):
     )
     submit = SubmitField('Upload')
 
+# Utility to log memory usage
+def log_memory_usage(context=""):
+    memory = psutil.virtual_memory()
+    print(f"{context} - Memory Usage: {memory.percent}% used, {memory.available // (1024**2)} MB available")
+
 # Colorization function
 def colorImage(image_path, image_name):
+    log_memory_usage("Before loading model files")
+    
     # Paths to model files
     base_dir = os.path.dirname(__file__)
     prototxt = os.path.join(base_dir, "colorization_deploy_v2.prototxt")
@@ -52,10 +60,15 @@ def colorImage(image_path, image_name):
     net.getLayer(net.getLayerId("class8_ab")).blobs = [pts.astype("float32")]
     net.getLayer(net.getLayerId("conv8_313_rh")).blobs = [np.full([1, 313], 2.606, dtype="float32")]
 
+    log_memory_usage("After loading model files")
+
     # Read and process the image
     image = cv2.imread(image_path)
     if image is None:
         raise ValueError("Unable to read the input image.")
+    
+    # Resize the image to reduce memory usage
+    image = cv2.resize(image, (512, 512))  # Resized to 512x512 for optimization
 
     h, w = image.shape[:2]
     image_lab = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
@@ -73,6 +86,8 @@ def colorImage(image_path, image_name):
 
     result_path = os.path.join(app.config['RESULT_FOLDER'], image_name)
     cv2.imwrite(result_path, bgr_colored)
+
+    log_memory_usage("After processing image")
 
 # Routes
 @app.route('/uploads/<filename>')
@@ -118,4 +133,4 @@ def resultImage():
     return render_template('result.html', file=original_images, color_file=colored_images)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, threaded=False)  # Reduced threads for optimized resource usage
