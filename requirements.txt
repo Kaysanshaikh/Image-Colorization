@@ -7,5 +7,4 @@ werkzeug==2.3.7
 numpy
 matplotlib
 opencv-python
-gunicorn
 psutil
