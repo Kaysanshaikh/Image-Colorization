@@ -6,6 +6,7 @@ from wtforms import SubmitField
 import numpy as np
 import cv2
 import os
+import gc
 from werkzeug.utils import secure_filename
 
 # Initiating app with name 'app'
@@ -15,8 +16,45 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'Strange'
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['RESULT_FOLDER'] = 'results'
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max upload size
+app.config['MAX_IMAGE_SIZE'] = 1024  # pixels
+
+# Create necessary directories
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(app.config['RESULT_FOLDER'], exist_ok=True)
+
+# Global variables for model
+net = None
+pts = None
+
+# Function to load the model once at startup
+def load_model():
+    global net, pts
+    base_dir = os.path.dirname(__file__)
+    prototxt = os.path.join(base_dir, "colorization_deploy_v2.prototxt")
+    caffe_model = os.path.join(base_dir, "colorization_release_v2.caffemodel")
+    pts_npy = os.path.join(base_dir, "pts_in_hull.npy")
+    
+    # Check if files exist
+    if not (os.path.exists(prototxt) and os.path.exists(caffe_model) and os.path.exists(pts_npy)):
+        raise FileNotFoundError(
+            f"One or more model files are missing:\n"
+            f"Prototxt: {prototxt}\nCaffe Model: {caffe_model}\nPts Numpy: {pts_npy}"
+        )
+    
+    try:
+        # Load the model
+        net = cv2.dnn.readNetFromCaffe(prototxt, caffe_model)
+        pts = np.load(pts_npy)
+        pts = pts.transpose().reshape(2, 313, 1, 1)
+        net.getLayer(net.getLayerId("class8_ab")).blobs = [pts.astype("float32")]
+        net.getLayer(net.getLayerId("conv8_313_rh")).blobs = [np.full([1, 313], 2.606, dtype="float32")]
+        print("Model loaded successfully")
+    except Exception as e:
+        raise RuntimeError(f"Error loading model files: {e}")
+
+# Load model at startup
+load_model()
 
 # Class for form upload validation and uploads
 class UploadForm(FlaskForm):
@@ -30,35 +68,20 @@ class UploadForm(FlaskForm):
 
 # Function to convert greyscale image to RGB and save it into result directory
 def colorImage(image_path, image_name):
-    # Define paths for model files
-    base_dir = os.path.dirname(__file__)
-    prototxt = os.path.join(base_dir, "colorization_deploy_v2.prototxt")
-    caffe_model = os.path.join(base_dir, "colorization_release_v2.caffemodel")
-    pts_npy = os.path.join(base_dir, "pts_in_hull.npy")
-
-    # Check if files exist
-    if not (os.path.exists(prototxt) and os.path.exists(caffe_model) and os.path.exists(pts_npy)):
-        raise FileNotFoundError(
-            f"One or more model files are missing:\n"
-            f"Prototxt: {prototxt}\nCaffe Model: {caffe_model}\nPts Numpy: {pts_npy}"
-        )
-
-    try:
-        # Load the model
-        net = cv2.dnn.readNetFromCaffe(prototxt, caffe_model)
-        pts = np.load(pts_npy)
-        pts = pts.transpose().reshape(2, 313, 1, 1)
-        net.getLayer(net.getLayerId("class8_ab")).blobs = [pts.astype("float32")]
-        net.getLayer(net.getLayerId("conv8_313_rh")).blobs = [np.full([1, 313], 2.606, dtype="float32")]
-    except Exception as e:
-        raise RuntimeError(f"Error loading model files: {e}")
-
+    global net
+    
     try:
         # Processing the image
         test_image = cv2.imread(image_path)
         if test_image is None:
             raise ValueError(f"Failed to read image from path: {image_path}")
-
+        
+        # Resize large images before processing
+        h, w = test_image.shape[:2]
+        if h > app.config['MAX_IMAGE_SIZE'] or w > app.config['MAX_IMAGE_SIZE']:
+            scale = app.config['MAX_IMAGE_SIZE'] / max(h, w)
+            test_image = cv2.resize(test_image, (int(w * scale), int(h * scale)))
+        
         test_image = cv2.cvtColor(test_image, cv2.COLOR_BGR2GRAY)
         test_image = cv2.cvtColor(test_image, cv2.COLOR_GRAY2RGB)
 
@@ -84,7 +107,13 @@ def colorImage(image_path, image_name):
         # Saving the image
         result_image_path = os.path.join(app.config['RESULT_FOLDER'], image_name)
         cv2.imwrite(result_image_path, RGB_BGR)
+        
+        # Force garbage collection to free memory
+        gc.collect()
+        
     except Exception as e:
+        # Force garbage collection even on error
+        gc.collect()
         raise RuntimeError(f"Error processing image: {e}")
 
 # Routes
@@ -130,4 +159,7 @@ def resultImage():
     return render_template('result.html', file=original_images, color_file=colored_images)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    # Get port from environment (Render sets this)
+    port = int(os.environ.get("PORT", 5000))
+    # Use 0.0.0.0 to bind to all addresses
+    app.run(host="0.0.0.0", port=port)
