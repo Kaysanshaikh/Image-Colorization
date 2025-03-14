@@ -7,8 +7,3 @@ matplotlib
 opencv-python
 gunicorn
 psutil
-
-
-
-
-
