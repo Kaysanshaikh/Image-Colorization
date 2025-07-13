@@ -3,45 +3,38 @@
     font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
 }
 
-
-
 body {
-    /* background-image: linear-gradient(#20262E 0%, #913175 200%); */
-    /* background-image: url('image3.jpg'); */
-    /* object-fit: cover; */
-    /* background-image: linear-gradient(#20262E 0%, #400E32 100%); */
-    /* background-repeat: no-repeat; */
     background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
-	background-size: 400% 400%;
-	animation: gradient 15s ease infinite;
+    background-size: 400% 400%;
+    animation: gradient 15s ease infinite;
     
     width: 100%;
-    height: 100%;
-    overflow: hidden;
-}
-@keyframes gradient {
-	0% {
-		background-position: 0% 50%;
-	}
-	50% {
-		background-position: 100% 50%;
-	}
-	100% {
-		background-position: 0% 50%;
-	}
+    min-height: 100vh; /* Changed from height: 100% */
+    overflow-x: hidden; /* Only hide horizontal overflow */
+    overflow-y: auto; /* Allow vertical scrolling */
 }
 
+@keyframes gradient {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
 
 .my-container {
     width: 100vw;
-    height: 100vh;
-
+    min-height: 100vh; /* Changed from height: 100vh */
 }
 
 .container {
     width: 100vw;
-    height: 100vh;
-
+    min-height: 100vh; /* Changed from height: 100vh */
+    padding-bottom: 50px; /* Add some bottom padding */
 }
 
 #error {
@@ -53,7 +46,6 @@ body {
 .container-navbar {
     padding: 25px;
     display: flex;
-    /* background-color: rgb(52, 130, 198); */
     justify-content: right;
 }
 
@@ -66,6 +58,7 @@ body {
     transition-duration: 0.5s;
     border-radius: 5px;
 }
+
 .bw {
     font-size: 55px;
 }
@@ -82,7 +75,6 @@ body {
     background-color: rgb(255, 255, 255);
     color: black;
     transition-duration: 0.5s;
-
 }
 
 .mainSec {
@@ -92,8 +84,6 @@ body {
     text-align: center;
 }
 
-
-
 .upload-button {
     display: flex;
     justify-content: center;
@@ -101,11 +91,12 @@ body {
 
 .row {
     padding: 10px;
-
 }
 
 #initial-img img {
     height: 500px;
+    max-width: 100%; /* Ensure images don't overflow */
+    object-fit: contain; /* Maintain aspect ratio */
 }
 
 #initial-img {
@@ -114,6 +105,8 @@ body {
 
 #final-img img {
     height: 500px;
+    max-width: 100%; /* Ensure images don't overflow */
+    object-fit: contain; /* Maintain aspect ratio */
 }
 
 #final-img {
@@ -134,4 +127,25 @@ body {
     color: #255784;
     background: #2196f3;
     box-shadow: 0 0 5px #2196f3, 0 0 10px #2196f3, 0 0 15px #2196f3;
+}
+
+/* Added responsive design for better mobile experience */
+@media (max-width: 768px) {
+    #initial-img img,
+    #final-img img {
+        height: 300px; /* Smaller images on mobile */
+    }
+    
+    .mainSec {
+        margin: 20px;
+    }
+    
+    .text {
+        font-size: 20px;
+        padding: 8px 20px;
+    }
+    
+    .bw {
+        font-size: 40px;
+    }
 }
