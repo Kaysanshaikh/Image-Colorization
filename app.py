@@ -7,6 +7,10 @@ import numpy as np
 import cv2
 import os
 from werkzeug.utils import secure_filename
+import logging
+
+# Set up logging
+logging.basicConfig(level=logging.DEBUG)
 
 # Initiating app with name 'app'
 app = Flask(__name__)
@@ -15,6 +19,8 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'Strange'
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['RESULT_FOLDER'] = 'results'
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+app.config['WTF_CSRF_ENABLED'] = False  # Disable CSRF protection
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(app.config['RESULT_FOLDER'], exist_ok=True)
 
@@ -28,6 +34,23 @@ class UploadForm(FlaskForm):
     )
     submit = SubmitField('Upload')
 
+# Function to check if model files exist
+def check_model_files():
+    base_dir = os.path.dirname(__file__)
+    prototxt = os.path.join(base_dir, "colorization_deploy_v2.prototxt")
+    caffe_model = os.path.join(base_dir, "colorization_release_v2.caffemodel")
+    pts_npy = os.path.join(base_dir, "pts_in_hull.npy")
+    
+    missing_files = []
+    if not os.path.exists(prototxt):
+        missing_files.append("colorization_deploy_v2.prototxt")
+    if not os.path.exists(caffe_model):
+        missing_files.append("colorization_release_v2.caffemodel")
+    if not os.path.exists(pts_npy):
+        missing_files.append("pts_in_hull.npy")
+    
+    return missing_files
+
 # Function to convert greyscale image to RGB and save it into result directory
 def colorImage(image_path, image_name):
     # Define paths for model files
@@ -37,10 +60,11 @@ def colorImage(image_path, image_name):
     pts_npy = os.path.join(base_dir, "pts_in_hull.npy")
 
     # Check if files exist
-    if not (os.path.exists(prototxt) and os.path.exists(caffe_model) and os.path.exists(pts_npy)):
+    missing_files = check_model_files()
+    if missing_files:
         raise FileNotFoundError(
-            f"One or more model files are missing:\n"
-            f"Prototxt: {prototxt}\nCaffe Model: {caffe_model}\nPts Numpy: {pts_npy}"
+            f"Missing model files: {', '.join(missing_files)}\n"
+            f"Download them from: https://github.com/richzhang/colorization/tree/caffe"
         )
 
     try:
@@ -84,6 +108,7 @@ def colorImage(image_path, image_name):
         # Saving the image
         result_image_path = os.path.join(app.config['RESULT_FOLDER'], image_name)
         cv2.imwrite(result_image_path, RGB_BGR)
+        app.logger.info(f"Successfully colorized image: {image_name}")
     except Exception as e:
         raise RuntimeError(f"Error processing image: {e}")
 
@@ -99,21 +124,41 @@ def get_color_file(filename):
 @app.route('/', methods=['GET', 'POST'])
 def index():
     form = UploadForm()
-    if form.validate_on_submit():
-        file = form.photo.data
-        filename = secure_filename(file.filename)
-        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        file.save(file_path)
-        try:
-            colorImage(file_path, filename)
-            file_url = url_for('get_file', filename=filename)
-            color_url = url_for('get_color_file', filename=filename)
-        except Exception as e:
-            return f"Error: {e}", 500
-    else:
-        file_url = None
-        color_url = None
-    return render_template('index.html', form=form, file_url=file_url, color_url=color_url)
+    
+    # Check if model files exist
+    missing_files = check_model_files()
+    if missing_files:
+        error_msg = f"Missing model files: {', '.join(missing_files)}. Please download them from the colorization repository."
+        return render_template('index.html', form=form, error=error_msg)
+    
+    if request.method == 'POST':
+        app.logger.debug(f"POST request received. Form data: {request.form}")
+        app.logger.debug(f"Files: {request.files}")
+        
+        if form.validate_on_submit():
+            file = form.photo.data
+            filename = secure_filename(file.filename)
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            
+            try:
+                file.save(file_path)
+                app.logger.info(f"File saved: {filename}")
+                
+                colorImage(file_path, filename)
+                app.logger.info(f"Image colorized successfully: {filename}")
+                
+                file_url = url_for('get_file', filename=filename)
+                color_url = url_for('get_color_file', filename=filename)
+                
+                return render_template('index.html', form=form, file_url=file_url, color_url=color_url)
+            except Exception as e:
+                app.logger.error(f"Error processing image: {e}")
+                return render_template('index.html', form=form, error=str(e))
+        else:
+            app.logger.error(f"Form validation failed. Errors: {form.errors}")
+            return render_template('index.html', form=form, error="Form validation failed. Please check your file.")
+    
+    return render_template('index.html', form=form)
 
 @app.route('/about')
 def about():
@@ -130,4 +175,4 @@ def resultImage():
     return render_template('result.html', file=original_images, color_file=colored_images)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=7860, debug=True)
